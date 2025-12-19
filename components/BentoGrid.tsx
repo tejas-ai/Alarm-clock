@@ -32,16 +32,18 @@ const BentoGrid: React.FC = () => {
 
   return (
     <div className="grid grid-cols-1 md:grid-cols-3 gap-3 md:gap-4 auto-rows-min md:auto-rows-[190px]">
+      {/* Fix: Passed sound prop instead of non-existent soundName, added required period prop, and fixed onSoundChange callback signature */}
       <AlarmCard 
         className="md:col-span-2 md:row-span-1 min-h-[160px] md:min-h-0"
         time={alarms[0].time} 
+        period="am"
         label={alarms[0].label} 
         isActive={alarms[0].isActive}
         days={alarms[0].days}
-        soundName={alarms[0].soundName}
+        sound={{ name: alarms[0].soundName || 'Default' }}
         onToggle={() => toggleAlarm(alarms[0].id)}
         onDaysChange={(days) => updateDays(alarms[0].id, days)}
-        onSoundChange={(name) => updateSound(alarms[0].id, name)}
+        onSoundChange={(s) => updateSound(alarms[0].id, s.name)}
       />
       
       <div className="glass p-5 md:p-6 rounded-[24px] flex flex-col justify-center items-center gap-1 md:gap-2 group hover:border-[#CCFF00]/30 transition-all min-h-[120px] md:min-h-0">
@@ -52,25 +54,27 @@ const BentoGrid: React.FC = () => {
       <AlarmCard 
         className="min-h-[160px] md:min-h-0"
         time={alarms[1].time} 
+        period="am"
         label={alarms[1].label} 
         isActive={alarms[1].isActive}
         days={alarms[1].days}
-        soundName={alarms[1].soundName}
+        sound={{ name: alarms[1].soundName || 'Default' }}
         onToggle={() => toggleAlarm(alarms[1].id)}
         onDaysChange={(days) => updateDays(alarms[1].id, days)}
-        onSoundChange={(name) => updateSound(alarms[1].id, name)}
+        onSoundChange={(s) => updateSound(alarms[1].id, s.name)}
       />
 
       <AlarmCard 
         className="min-h-[160px] md:min-h-0"
         time={alarms[2].time} 
+        period="am"
         label={alarms[2].label} 
         isActive={alarms[2].isActive}
         days={alarms[2].days}
-        soundName={alarms[2].soundName}
+        sound={{ name: alarms[2].soundName || 'Default' }}
         onToggle={() => toggleAlarm(alarms[2].id)}
         onDaysChange={(days) => updateDays(alarms[2].id, days)}
-        onSoundChange={(name) => updateSound(alarms[2].id, name)}
+        onSoundChange={(s) => updateSound(alarms[2].id, s.name)}
       />
 
       <div className="glass p-5 md:p-6 rounded-[24px] flex flex-col justify-between md:row-span-1 group min-h-[120px] md:min-h-0">

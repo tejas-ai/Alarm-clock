@@ -1,8 +1,5 @@
 {
   "name": "Lumina Alarm",
   "description": "An adaptive glassmorphic alarm and sleep management system with circadian lighting and AI-driven wake-up suggestions.",
-  "requestFramePermissions": [
-    "camera",
-    "microphone"
-  ]
+  "requestFramePermissions": []
 }
