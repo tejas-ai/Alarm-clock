@@ -1,47 +1,122 @@
 
 import React, { useState } from 'react';
 import { Alarm } from '../types';
+import AlarmCard from './AlarmCard';
 
 interface Props {
   mini?: boolean;
+  alarms: Alarm[];
+  onToggle: (id: string) => void;
+  onSunriseToggle: (id: string) => void;
+  onDelete: (id: string) => void;
+  onAdd: (newAlarm: Alarm) => void;
 }
 
-const AlarmList: React.FC<Props> = ({ mini }) => {
-  // Fix: Explicitly treat 'period' literals as 'am' | 'pm' to avoid 'string' inference in ternary expressions
-  const [alarms, setAlarms] = useState<Alarm[]>([
-    { id: '1', time: '5:00', period: 'am', isActive: true },
-    { id: '2', time: '6:00', period: 'am', isActive: false },
-    ...(mini ? [] : [
-        { id: '3', time: '8:30', period: 'am' as const, isActive: true },
-        { id: '4', time: '10:15', period: 'pm' as const, isActive: false }
-    ])
-  ]);
+const AlarmList: React.FC<Props> = ({ mini, alarms, onToggle, onSunriseToggle, onDelete, onAdd }) => {
+  const [isAdding, setIsAdding] = useState(false);
+  const [newTime, setNewTime] = useState("07:00");
+  const [newPeriod, setNewPeriod] = useState<'am' | 'pm'>('am');
+  const [newLabel, setNewLabel] = useState("");
 
-  const toggleAlarm = (id: string) => {
-    setAlarms(prev => prev.map(a => a.id === id ? { ...a, isActive: !a.isActive } : a));
+  const handleAdd = () => {
+    onAdd({
+      id: Date.now().toString(),
+      time: newTime,
+      period: newPeriod,
+      isActive: true,
+      sunriseEnabled: true,
+      label: newLabel || "New Alarm"
+    });
+    setIsAdding(false);
+    setNewLabel("");
   };
 
   return (
-    <div className="w-full flex flex-col gap-6">
-      {alarms.map(alarm => (
-        <div key={alarm.id} className="w-full h-16 rounded-xl neu-outset flex items-center justify-between px-6 transition-all active:scale-[0.99]">
-          <div className="flex items-baseline gap-1">
-            <span className="text-xl font-black text-[#31456a]">{alarm.time}</span>
-            <span className="text-xs font-bold text-[#31456a]/40 uppercase">{alarm.period}</span>
+    <div className="w-full flex flex-col gap-6 animate-in fade-in slide-in-from-bottom-2 duration-500">
+      {!mini && (
+        <div className="flex justify-between items-center px-2">
+           <h2 className="text-xs font-black text-[#31456a]/40 uppercase tracking-widest">Manage Schedule</h2>
+           <button 
+            onClick={() => setIsAdding(!isAdding)}
+            className={`w-10 h-10 rounded-2xl flex items-center justify-center transition-all ${isAdding ? 'neu-pressed text-red-500' : 'neu-outset text-[#31456a]'}`}
+           >
+             <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+               {isAdding ? (
+                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+               ) : (
+                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4v16m8-8H4" />
+               )}
+             </svg>
+           </button>
+        </div>
+      )}
+
+      {isAdding && !mini && (
+        <div className="neu-outset p-6 rounded-[32px] flex flex-col gap-6 mb-2 animate-in slide-in-from-top-4 duration-500">
+          <div className="flex gap-4">
+            <div className="flex-1">
+              <label className="text-[10px] font-black uppercase text-[#31456a]/40 tracking-widest block mb-2">Time</label>
+              <input 
+                type="time" 
+                value={newTime}
+                onChange={(e) => setNewTime(e.target.value)}
+                className="w-full bg-[#E0E5EC] neu-inset border-none rounded-xl p-3 text-[#31456a] font-bold focus:ring-1 focus:ring-[#31456a]/20"
+              />
+            </div>
+            <div className="w-24">
+              <label className="text-[10px] font-black uppercase text-[#31456a]/40 tracking-widest block mb-2">Period</label>
+              <div className="flex h-12 rounded-xl overflow-hidden neu-inset p-1 gap-1">
+                {(['am', 'pm'] as const).map(p => (
+                  <button 
+                    key={p}
+                    onClick={() => setNewPeriod(p)}
+                    className={`flex-1 rounded-lg text-[10px] font-black uppercase transition-all ${newPeriod === p ? 'bg-white shadow-sm text-[#31456a]' : 'text-[#31456a]/30'}`}
+                  >
+                    {p}
+                  </button>
+                ))}
+              </div>
+            </div>
           </div>
-          
+          <div>
+            <label className="text-[10px] font-black uppercase text-[#31456a]/40 tracking-widest block mb-2">Label</label>
+            <input 
+              type="text" 
+              placeholder="e.g. Gym Session"
+              value={newLabel}
+              onChange={(e) => setNewLabel(e.target.value)}
+              className="w-full bg-[#E0E5EC] neu-inset border-none rounded-xl p-3 text-[#31456a] font-bold focus:ring-1 focus:ring-[#31456a]/20 placeholder:text-[#31456a]/20"
+            />
+          </div>
           <button 
-            onClick={() => toggleAlarm(alarm.id)}
-            className={`w-14 h-8 rounded-full transition-all duration-300 p-1 flex items-center neu-inset`}
+            onClick={handleAdd}
+            className="w-full py-4 rounded-2xl bg-[#31456a] text-white font-black uppercase tracking-widest shadow-lg hover:scale-[0.98] active:scale-95 transition-all"
           >
-            <div className={`w-6 h-6 rounded-full transition-transform duration-300 transform shadow-md ${
-                alarm.isActive 
-                    ? 'translate-x-6 bg-[#31456a]' 
-                    : 'translate-x-0 bg-white'
-            }`} />
+            Create Alarm
           </button>
         </div>
-      ))}
+      )}
+      
+      <div className="grid grid-cols-1 gap-5">
+        {alarms.length > 0 ? alarms.map(alarm => (
+          <AlarmCard 
+            key={alarm.id}
+            time={alarm.time}
+            period={alarm.period}
+            label={alarm.label || "Alarm"}
+            isActive={alarm.isActive}
+            sunriseEnabled={alarm.sunriseEnabled}
+            onToggle={() => onToggle(alarm.id)}
+            onSunriseToggle={() => onSunriseToggle(alarm.id)}
+            onDelete={mini ? undefined : () => onDelete(alarm.id)}
+          />
+        )) : (
+          <div className="py-12 flex flex-col items-center opacity-30">
+            <svg className="w-12 h-12 mb-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" /></svg>
+            <p className="text-sm font-bold uppercase tracking-widest">No Alarms Set</p>
+          </div>
+        )}
+      </div>
     </div>
   );
 };
