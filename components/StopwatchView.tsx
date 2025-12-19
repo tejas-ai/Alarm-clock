@@ -34,22 +34,19 @@ const StopwatchView: React.FC = () => {
 
   return (
     <div className="flex flex-col items-center w-full">
-      {/* Circular Display */}
       <div className="w-64 h-64 rounded-full neu-outset flex items-center justify-center relative mb-12">
-        {/* Ring markers */}
-        <div className="absolute inset-4 rounded-full border-[6px] border-[#31456a]/5" />
+        <div className="absolute inset-4 rounded-full border-[6px] border-appText/5" />
         <div className="w-56 h-56 rounded-full neu-inset flex items-center justify-center">
-            <span className="text-3xl font-black text-[#31456a] tabular-nums">
+            <span className="text-3xl font-black text-appText tabular-nums">
                 {formatTime(time)}
             </span>
         </div>
       </div>
 
-      {/* Buttons */}
       <div className="w-full flex justify-between gap-6 mb-12">
         <button 
             onClick={handleStartStop}
-            className="flex-1 py-4 rounded-xl neu-outset text-sm font-black text-[#31456a] active:neu-pressed neu-button transition-all"
+            className="flex-1 py-4 rounded-xl neu-outset text-sm font-black text-appText active:neu-pressed neu-button transition-all"
         >
           {isRunning ? 'Pause' : 'Start'}
         </button>
@@ -61,15 +58,14 @@ const StopwatchView: React.FC = () => {
         </button>
       </div>
 
-      {/* Lap List */}
       <div className="w-full space-y-4">
         {laps.map(lap => (
           <div key={lap.id} className="w-full h-14 rounded-xl neu-outset flex items-center justify-between px-6">
             <div className="flex items-center gap-2">
-                <span className="text-xs font-black text-[#31456a]">{lap.id}</span>
-                <span className="text-xs font-bold text-[#31456a]/40 uppercase tracking-tight">Lap</span>
+                <span className="text-xs font-black text-appText">{lap.id}</span>
+                <span className="text-xs font-bold text-appMuted uppercase tracking-tight">Lap</span>
             </div>
-            <span className="text-sm font-black text-[#31456a] tabular-nums">{lap.time}</span>
+            <span className="text-sm font-black text-appText tabular-nums">{lap.time}</span>
           </div>
         ))}
       </div>

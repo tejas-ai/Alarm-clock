@@ -35,10 +35,10 @@ const AlarmList: React.FC<Props> = ({ mini, alarms, onToggle, onSunriseToggle, o
     <div className="w-full flex flex-col gap-6 animate-in fade-in slide-in-from-bottom-2 duration-500">
       {!mini && (
         <div className="flex justify-between items-center px-2">
-           <h2 className="text-xs font-black text-[#31456a]/40 uppercase tracking-widest">Manage Schedule</h2>
+           <h2 className="text-xs font-black text-appMuted uppercase tracking-widest">Manage Schedule</h2>
            <button 
             onClick={() => setIsAdding(!isAdding)}
-            className={`w-10 h-10 rounded-2xl flex items-center justify-center transition-all ${isAdding ? 'neu-pressed text-red-500' : 'neu-outset text-[#31456a]'}`}
+            className={`w-10 h-10 rounded-2xl flex items-center justify-center transition-all ${isAdding ? 'neu-pressed text-red-500' : 'neu-outset text-appText'}`}
            >
              <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                {isAdding ? (
@@ -55,22 +55,22 @@ const AlarmList: React.FC<Props> = ({ mini, alarms, onToggle, onSunriseToggle, o
         <div className="neu-outset p-6 rounded-[32px] flex flex-col gap-6 mb-2 animate-in slide-in-from-top-4 duration-500">
           <div className="flex gap-4">
             <div className="flex-1">
-              <label className="text-[10px] font-black uppercase text-[#31456a]/40 tracking-widest block mb-2">Time</label>
+              <label className="text-[10px] font-black uppercase text-appMuted tracking-widest block mb-2">Time</label>
               <input 
                 type="time" 
                 value={newTime}
                 onChange={(e) => setNewTime(e.target.value)}
-                className="w-full bg-[#E0E5EC] neu-inset border-none rounded-xl p-3 text-[#31456a] font-bold focus:ring-1 focus:ring-[#31456a]/20"
+                className="w-full bg-appBg neu-inset border-none rounded-xl p-3 text-appText font-bold focus:ring-1 focus:ring-appText/20"
               />
             </div>
             <div className="w-24">
-              <label className="text-[10px] font-black uppercase text-[#31456a]/40 tracking-widest block mb-2">Period</label>
+              <label className="text-[10px] font-black uppercase text-appMuted tracking-widest block mb-2">Period</label>
               <div className="flex h-12 rounded-xl overflow-hidden neu-inset p-1 gap-1">
                 {(['am', 'pm'] as const).map(p => (
                   <button 
                     key={p}
                     onClick={() => setNewPeriod(p)}
-                    className={`flex-1 rounded-lg text-[10px] font-black uppercase transition-all ${newPeriod === p ? 'bg-white shadow-sm text-[#31456a]' : 'text-[#31456a]/30'}`}
+                    className={`flex-1 rounded-lg text-[10px] font-black uppercase transition-all ${newPeriod === p ? 'bg-white/20 shadow-sm text-appText' : 'text-appMuted'}`}
                   >
                     {p}
                   </button>
@@ -79,18 +79,18 @@ const AlarmList: React.FC<Props> = ({ mini, alarms, onToggle, onSunriseToggle, o
             </div>
           </div>
           <div>
-            <label className="text-[10px] font-black uppercase text-[#31456a]/40 tracking-widest block mb-2">Label</label>
+            <label className="text-[10px] font-black uppercase text-appMuted tracking-widest block mb-2">Label</label>
             <input 
               type="text" 
               placeholder="e.g. Gym Session"
               value={newLabel}
               onChange={(e) => setNewLabel(e.target.value)}
-              className="w-full bg-[#E0E5EC] neu-inset border-none rounded-xl p-3 text-[#31456a] font-bold focus:ring-1 focus:ring-[#31456a]/20 placeholder:text-[#31456a]/20"
+              className="w-full bg-appBg neu-inset border-none rounded-xl p-3 text-appText font-bold focus:ring-1 focus:ring-appText/20 placeholder:text-appMuted/20"
             />
           </div>
           <button 
             onClick={handleAdd}
-            className="w-full py-4 rounded-2xl bg-[#31456a] text-white font-black uppercase tracking-widest shadow-lg hover:scale-[0.98] active:scale-95 transition-all"
+            className="w-full py-4 rounded-2xl bg-appText text-appBg font-black uppercase tracking-widest shadow-lg hover:scale-[0.98] active:scale-95 transition-all"
           >
             Create Alarm
           </button>

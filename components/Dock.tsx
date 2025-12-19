@@ -35,8 +35,8 @@ const Dock: React.FC<Props> = ({ activeTab, onTabChange }) => {
           onClick={() => onTabChange(tab.id)}
           className={`w-14 h-14 rounded-2xl flex items-center justify-center transition-all duration-300 ${
             activeTab === tab.id 
-              ? 'neu-pressed text-[#31456a]' 
-              : 'neu-outset text-[#31456a]/40 neu-button'
+              ? 'neu-pressed text-appText' 
+              : 'neu-outset text-appMuted neu-button'
           }`}
         >
           {tab.icon}

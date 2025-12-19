@@ -7,21 +7,44 @@
     <title>Lumina Alarm</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;900&display=swap" rel="stylesheet">
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    colors: {
+                        appBg: 'var(--bg)',
+                        appText: 'var(--text-main)',
+                        appMuted: 'var(--text-muted)',
+                    }
+                }
+            }
+        }
+    </script>
     <style>
         :root {
             --bg: #E0E5EC;
             --shadow-dark: #a3b1c6;
             --shadow-light: #ffffff;
+            --text-main: #31456a;
+            --text-muted: rgba(49, 69, 106, 0.4);
+        }
+        body.dark-mode {
+            --bg: #1a1e24;
+            --shadow-dark: #0f1216;
+            --shadow-light: #252b32;
+            --text-main: #e0e5ec;
+            --text-muted: rgba(224, 229, 236, 0.4);
         }
         body {
             font-family: 'Inter', sans-serif;
             margin: 0;
             padding: 0;
             background: var(--bg);
-            color: #31456a;
+            color: var(--text-main);
             user-select: none;
             overflow-x: hidden;
             overscroll-behavior-y: contain;
+            transition: background-color 0.5s ease, color 0.5s ease;
         }
         .neu-outset {
             background: var(--bg);
