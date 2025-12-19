@@ -67,6 +67,17 @@ const SettingsView: React.FC<Props> = ({ theme, onToggleTheme, uiSounds, onToggl
       </section>
 
       <section className="space-y-4">
+        <h2 className="px-2 text-[10px] font-black text-appMuted uppercase tracking-[0.3em]">Founder</h2>
+        <div className="neu-outset p-6 rounded-[32px] flex flex-col gap-1 group relative overflow-hidden">
+            <div className="absolute top-0 right-0 p-6 opacity-[0.03] group-hover:opacity-[0.08] transition-opacity">
+                <svg className="w-24 h-24 text-appText" fill="currentColor" viewBox="0 0 24 24"><path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm0 3c1.66 0 3 1.34 3 3s-1.34 3-3 3-3-1.34-3-3 1.34-3 3-3zm0 14.2c-2.5 0-4.71-1.28-6-3.22.03-1.99 4-3.08 6-3.08 1.99 0 5.97 1.09 6 3.08-1.29 1.94-3.5 3.22-6 3.22z"/></svg>
+            </div>
+            <span className="text-xs font-black text-appText uppercase tracking-[0.2em]">Tejas J.H</span>
+            <span className="text-[9px] font-bold text-appMuted uppercase tracking-widest">Visionary & Lead Engineer</span>
+        </div>
+      </section>
+
+      <section className="space-y-4">
         <h2 className="px-2 text-[10px] font-black text-appMuted uppercase tracking-[0.3em]">System</h2>
         <div className="grid grid-cols-2 gap-4">
           <div className="neu-outset p-5 rounded-[28px] flex flex-col items-center justify-center text-center gap-2">

@@ -137,9 +137,7 @@ const App: React.FC = () => {
         const next = prev.map(t => {
           if (!t.completed && t.reminder && !t.reminderFired && t.reminder <= nowTs) {
             changed = true;
-            // Trigger a sound and alert for reminder
             if (uiSoundsEnabled) sfx.playTick();
-            // We'll just mark it as fired for now. In a real app we'd show a notification.
             return { ...t, reminderFired: true };
           }
           return t;
@@ -195,7 +193,7 @@ const App: React.FC = () => {
   const toggleTheme = () => setTheme(prev => prev === 'light' ? 'dark' : 'light');
 
   return (
-    <div className="relative min-h-screen w-full flex flex-col items-center px-6 pt-10 pb-36 overflow-hidden bg-appBg">
+    <div className="relative min-h-screen w-full flex flex-col items-center px-6 pt-10 pb-48 overflow-y-auto bg-appBg">
       
       {/* Ringing Overlay */}
       {ringingAlarm && (
@@ -225,7 +223,7 @@ const App: React.FC = () => {
       </div>
 
       {/* Main Content */}
-      <div className="w-full max-w-md z-10 flex flex-col items-center">
+      <div className="w-full max-w-md z-10 flex flex-col items-center flex-1">
         {activeTab === 'Clock' && (
           <div className="flex flex-col items-center gap-16 w-full">
             <AnalogClock time={currentTime} />
