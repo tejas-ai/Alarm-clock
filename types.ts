@@ -1,4 +1,3 @@
-
 export interface Alarm {
   id: string;
   time: string; // "HH:MM" format
@@ -16,7 +15,17 @@ export interface Alarm {
   };
 }
 
-export type NavTab = 'Clock' | 'Alarm' | 'Stopwatch' | 'Timer' | 'Settings';
+export interface Todo {
+  id: string;
+  text: string;
+  completed: boolean;
+  priority: 'low' | 'medium' | 'high';
+  createdAt: number;
+  reminder?: number; // timestamp
+  reminderFired?: boolean;
+}
+
+export type NavTab = 'Clock' | 'Alarm' | 'Focus' | 'Stopwatch' | 'Settings';
 
 export interface Lap {
   id: number;

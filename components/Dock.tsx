@@ -1,4 +1,3 @@
-
 import React from 'react';
 import { NavTab } from '../types';
 
@@ -18,12 +17,12 @@ const Dock: React.FC<Props> = ({ activeTab, onTabChange }) => {
         icon: <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" /></svg> 
     },
     { 
-        id: 'Stopwatch', 
-        icon: <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" /></svg> 
+        id: 'Focus', 
+        icon: <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2m-6 9l2 2 4-4" /></svg> 
     },
     { 
-        id: 'Timer', 
-        icon: <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 18h.01M8 21h8a2 2 0 002-2V5a2 2 0 00-2-2H8a2 2 0 00-2 2v14a2 2 0 002 2z" /></svg> 
+        id: 'Stopwatch', 
+        icon: <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" /></svg> 
     },
     { 
         id: 'Settings', 
@@ -32,15 +31,15 @@ const Dock: React.FC<Props> = ({ activeTab, onTabChange }) => {
   ];
 
   return (
-    <div className="fixed bottom-10 left-1/2 -translate-x-1/2 w-[95%] max-w-md flex justify-between p-2">
+    <div className="fixed bottom-10 left-1/2 -translate-x-1/2 w-[90%] max-w-sm flex justify-between p-2 rounded-[32px] neu-outset">
       {tabs.map(tab => (
         <button
           key={tab.id}
           onClick={() => onTabChange(tab.id)}
-          className={`w-12 h-12 sm:w-14 sm:h-14 rounded-2xl flex items-center justify-center transition-all duration-300 ${
+          className={`w-12 h-12 rounded-2xl flex items-center justify-center transition-all duration-300 ${
             activeTab === tab.id 
               ? 'neu-pressed text-appText' 
-              : 'neu-outset text-appMuted neu-button'
+              : 'text-appMuted hover:text-appText'
           }`}
         >
           {tab.icon}

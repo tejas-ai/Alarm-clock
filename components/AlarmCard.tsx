@@ -1,4 +1,3 @@
-
 import React, { useState, useRef, useEffect } from 'react';
 import { sounds as sfx } from '../services/sounds';
 
@@ -20,6 +19,8 @@ interface AlarmCardProps {
 }
 
 const WEEKDAYS = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'];
+const DAY_LABELS = ['S', 'M', 'T', 'W', 'T', 'F', 'S'];
+
 const DEFAULT_SOUNDS: { name: string; url?: string }[] = [
   { name: 'Classic Bell' },
   { name: 'Zen Garden' },
@@ -64,12 +65,6 @@ const AlarmCard: React.FC<AlarmCardProps> = ({
     onDaysChange(newDays);
   };
 
-  const toggleEffect = (key: 'fade' | 'vibrate') => {
-    playFeedback();
-    if (!onEffectsChange) return;
-    onEffectsChange({ ...effects, [key]: !effects[key] });
-  };
-
   const handlePreview = (s: { name: string; url?: string }) => {
     if (previewing === s.name) {
       sfx.stopAll(0.3);
@@ -77,7 +72,6 @@ const AlarmCard: React.FC<AlarmCardProps> = ({
     } else {
       sfx.playPreview(s, 0.5);
       setPreviewing(s.name);
-      // Auto stop after 5 seconds for preview
       setTimeout(() => setPreviewing(p => p === s.name ? null : p), 5000);
     }
   };
@@ -98,8 +92,11 @@ const AlarmCard: React.FC<AlarmCardProps> = ({
     }
   };
 
+  const hours = time.split(':')[0];
+  const mins = time.split(':')[1];
+
   return (
-    <div className={`neu-outset p-5 rounded-[28px] flex flex-col gap-5 transition-all duration-500 hover:scale-[1.01] relative group ${className}`}>
+    <div className={`p-6 rounded-[32px] flex flex-col gap-6 transition-all duration-500 relative group neu-outset ${className} ${!isActive ? 'opacity-60' : ''}`}>
       {onDelete && (
         <button 
           onClick={() => { playFeedback(); onDelete(); }}
@@ -109,131 +106,117 @@ const AlarmCard: React.FC<AlarmCardProps> = ({
         </button>
       )}
 
-      <div className="flex justify-between items-start">
-        <div className="flex flex-col">
-          <span className="text-[10px] font-black tracking-widest uppercase text-appMuted">
-            {label || "Alarm"}
-          </span>
-          <div className="mt-1 flex items-baseline gap-1">
-            <span className={`text-4xl font-black transition-colors duration-300 tabular-nums ${isActive ? 'text-appText' : 'text-appMuted'}`}>
-              {time}
-            </span>
-            <span className={`text-xs font-bold uppercase ${isActive ? 'text-appText/60' : 'text-appMuted/40'}`}>
-              {period}
-            </span>
-          </div>
-        </div>
-        
+      {/* Header with Switch */}
+      <div className="flex justify-between items-center">
+        <span className="text-[10px] font-black tracking-[0.2em] uppercase text-appMuted">
+          {label || "NEW ALARM"}
+        </span>
         <button 
           onClick={() => { playFeedback(); onToggle(); }}
-          className={`w-14 h-8 rounded-full transition-all duration-300 p-1 flex items-center neu-inset`}
+          className={`w-12 h-6 rounded-full transition-all duration-300 p-1 flex items-center ${isActive ? 'bg-appText' : 'bg-appText/10'}`}
         >
-          <div className={`w-6 h-6 rounded-full transition-transform duration-300 transform shadow-md ${
+          <div className={`w-4 h-4 rounded-full transition-transform duration-300 transform ${
               isActive 
-                  ? 'translate-x-6 bg-appText' 
-                  : 'translate-x-0 bg-appBg'
+                  ? 'translate-x-6 bg-appBg' 
+                  : 'translate-x-0 bg-appText/40'
           }`} />
         </button>
       </div>
 
+      {/* Time Display */}
+      <div className="flex items-baseline gap-2">
+        <div className="flex items-center">
+          <span className="text-6xl font-black text-appText tracking-tighter tabular-nums">{hours}</span>
+          <span className="text-4xl font-black text-appMuted/30 mx-1">:</span>
+          <span className="text-6xl font-black text-appText tracking-tighter tabular-nums">{mins}</span>
+        </div>
+        <span className="text-xl font-black uppercase text-appMuted tracking-tight">{period}</span>
+      </div>
+
+      {/* Days Selection */}
       <div className="flex justify-between gap-1">
-        {WEEKDAYS.map((day) => {
+        {WEEKDAYS.map((day, idx) => {
           const isSelected = days.includes(day);
           return (
             <button
               key={day}
               onClick={() => toggleDay(day)}
-              className={`flex-1 h-8 rounded-lg text-[10px] font-black uppercase transition-all flex items-center justify-center ${
+              className={`w-10 h-10 rounded-xl text-xs font-black transition-all flex items-center justify-center ${
                 isSelected
-                  ? 'text-appText neu-pressed'
-                  : 'text-appMuted/40 hover:text-appMuted'
+                  ? 'neu-pressed text-appText'
+                  : 'text-appMuted/40 hover:text-appText/60'
               }`}
             >
-              {day[0]}
+              {DAY_LABELS[idx]}
             </button>
           );
         })}
       </div>
 
-      <div className="flex items-center gap-3">
+      {/* Sound Selection Bar */}
+      <div className="flex flex-col gap-2">
         <button 
           onClick={() => { playFeedback(); setShowSounds(!showSounds); }}
-          className={`flex-1 h-12 px-4 rounded-2xl flex items-center justify-between transition-all overflow-hidden ${showSounds ? 'neu-pressed' : 'neu-inset'}`}
+          className={`h-14 px-5 rounded-2xl flex items-center justify-between transition-all bg-appText/[0.03] border border-appText/[0.05] active:bg-appText/[0.08]`}
         >
-          <div className="flex items-center gap-3 overflow-hidden">
+          <div className="flex items-center gap-4">
             <svg className={`w-4 h-4 ${sound?.url ? 'text-blue-500' : 'text-appMuted'}`} fill="currentColor" viewBox="0 0 20 20">
               <path d="M9.383 3.076A1 1 0 0110 4v12a1 1 0 01-1.707.707L4.586 13H2a1 1 0 01-1-1V8a1 1 0 011-1h2.586l3.707-3.707a1 1 0 011.09-.217z"/>
             </svg>
-            <span className="text-[10px] font-black uppercase text-appText tracking-widest truncate">
+            <span className="text-[10px] font-black uppercase text-appText/60 tracking-[0.2em] truncate">
               {sound.name}
             </span>
           </div>
           <svg className={`w-4 h-4 text-appMuted transition-transform duration-300 ${showSounds ? 'rotate-180' : ''}`} fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" /></svg>
         </button>
 
-        <div className="flex gap-2">
-            <button 
-                onClick={() => toggleEffect('fade')}
-                className={`w-12 h-12 rounded-2xl flex items-center justify-center transition-all ${effects.fade ? 'neu-pressed text-appText' : 'neu-outset text-appMuted'}`}
+        {showSounds && (
+          <div className="flex flex-col gap-1.5 mt-2 animate-in slide-in-from-top-2 duration-300 bg-appBg/50 backdrop-blur-md p-3 rounded-2xl border border-appText/10">
+            <div className="grid grid-cols-1 gap-1">
+              {DEFAULT_SOUNDS.map((s) => (
+                <div key={s.name} className="flex gap-1">
+                  <button
+                    onClick={() => {
+                      playFeedback();
+                      onSoundChange?.(s);
+                    }}
+                    className={`flex-1 py-3 px-4 rounded-xl text-[10px] font-black uppercase tracking-widest text-left transition-all ${
+                      sound.name === s.name ? 'neu-inset text-appText' : 'text-appMuted hover:text-appText'
+                    }`}
+                  >
+                    {s.name}
+                  </button>
+                  <button 
+                    onClick={() => handlePreview(s)}
+                    className={`w-12 rounded-xl flex items-center justify-center transition-all ${previewing === s.name ? 'text-blue-500' : 'text-appMuted/30'}`}
+                  >
+                    {previewing === s.name ? (
+                      <div className="w-2 h-2 rounded-full bg-blue-500 animate-pulse" />
+                    ) : (
+                      <svg className="w-4 h-4" fill="currentColor" viewBox="0 0 20 20"><path d="M10 18a8 8 0 100-16 8 8 0 000 16zM9.555 7.168A1 1 0 008 8v4a1 1 0 001.555.832l3-2a1 1 0 000-1.664l-3-2z"/></svg>
+                    )}
+                  </button>
+                </div>
+              ))}
+            </div>
+            
+            <input 
+              type="file" 
+              ref={fileInputRef}
+              onChange={handleFileUpload}
+              accept="audio/*"
+              className="hidden"
+            />
+            
+            <button
+              onClick={() => { playFeedback(); fileInputRef.current?.click(); }}
+              className="w-full h-11 rounded-xl border border-dashed border-appMuted/20 text-[9px] font-black uppercase tracking-widest text-appMuted hover:text-appText transition-all flex items-center justify-center gap-3 mt-1"
             >
-                <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 7h8m0 0v8m0-8l-8 8-4-4-6 6" /></svg>
+              Upload Custom
             </button>
-            <button 
-                onClick={() => toggleEffect('vibrate')}
-                className={`w-12 h-12 rounded-2xl flex items-center justify-center transition-all ${effects.vibrate ? 'neu-pressed text-appText' : 'neu-outset text-appMuted'}`}
-            >
-                <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 18h.01M8 21h8a2 2 0 002-2V5a2 2 0 00-2-2H8a2 2 0 00-2 2v14a2 2 0 002 2z" /></svg>
-            </button>
-        </div>
-      </div>
-
-      {showSounds && (
-        <div className="flex flex-col gap-3 animate-in slide-in-from-top-2 duration-300">
-          <div className="grid grid-cols-2 gap-2">
-            {DEFAULT_SOUNDS.map((s) => (
-              <div key={s.name} className="flex gap-1">
-                <button
-                  onClick={() => {
-                    playFeedback();
-                    onSoundChange?.(s);
-                  }}
-                  className={`flex-1 py-3 px-3 rounded-xl text-[9px] font-black uppercase tracking-wider transition-all ${
-                    sound.name === s.name ? 'text-appText neu-pressed' : 'text-appMuted/60 neu-outset'
-                  }`}
-                >
-                  {s.name}
-                </button>
-                <button 
-                  onClick={() => handlePreview(s)}
-                  className={`w-10 rounded-xl flex items-center justify-center transition-all ${previewing === s.name ? 'text-red-500 neu-pressed' : 'text-appMuted/40 neu-outset'}`}
-                >
-                  {previewing === s.name ? (
-                    <div className="w-2 h-2 rounded-full bg-red-500 animate-pulse" />
-                  ) : (
-                    <svg className="w-4 h-4" fill="currentColor" viewBox="0 0 20 20"><path d="M10 18a8 8 0 100-16 8 8 0 000 16zM9.555 7.168A1 1 0 008 8v4a1 1 0 001.555.832l3-2a1 1 0 000-1.664l-3-2z"/></svg>
-                  )}
-                </button>
-              </div>
-            ))}
           </div>
-          
-          <input 
-            type="file" 
-            ref={fileInputRef}
-            onChange={handleFileUpload}
-            accept="audio/*"
-            className="hidden"
-          />
-          
-          <button
-            onClick={() => { playFeedback(); fileInputRef.current?.click(); }}
-            className="w-full h-12 rounded-2xl border border-dashed border-appMuted/30 text-[10px] font-black uppercase tracking-widest text-appMuted hover:text-appText hover:border-appText transition-all flex items-center justify-center gap-3"
-          >
-            <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4v16m8-8H4" /></svg>
-            Upload Custom Sound
-          </button>
-        </div>
-      )}
+        )}
+      </div>
     </div>
   );
 };

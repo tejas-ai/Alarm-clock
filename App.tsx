@@ -1,11 +1,11 @@
-
 import React, { useState, useEffect, useCallback } from 'react';
-import { NavTab, Alarm } from './types';
+import { NavTab, Alarm, Todo } from './types';
 import { sounds as sfx } from './services/sounds';
 import AnalogClock from './components/AnalogClock';
 import AlarmList from './components/AlarmList';
 import StopwatchView from './components/StopwatchView';
 import SettingsView from './components/SettingsView';
+import TodoView from './components/TodoView';
 import Dock from './components/Dock';
 
 const App: React.FC = () => {
@@ -14,7 +14,7 @@ const App: React.FC = () => {
   const [ringingAlarm, setRingingAlarm] = useState<Alarm | null>(null);
   const [ringingProgress, setRingingProgress] = useState(0);
 
-  // Sound Settings
+  // UI Sounds State
   const [uiSoundsEnabled, setUiSoundsEnabled] = useState(() => {
     return localStorage.getItem('lumina_ui_sounds') !== 'false';
   });
@@ -41,7 +41,7 @@ const App: React.FC = () => {
     localStorage.setItem('lumina_theme', theme);
   }, [theme]);
 
-  // Alarms
+  // Alarms State
   const [alarms, setAlarms] = useState<Alarm[]>(() => {
     const saved = localStorage.getItem('lumina_alarms');
     return saved ? JSON.parse(saved) : [
@@ -54,7 +54,38 @@ const App: React.FC = () => {
     localStorage.setItem('lumina_alarms', JSON.stringify(alarms));
   }, [alarms]);
 
-  // Handle Alarm Sound and Volume
+  // Todos State
+  const [todos, setTodos] = useState<Todo[]>(() => {
+    const saved = localStorage.getItem('lumina_todos');
+    return saved ? JSON.parse(saved) : [];
+  });
+
+  useEffect(() => {
+    localStorage.setItem('lumina_todos', JSON.stringify(todos));
+  }, [todos]);
+
+  const addTodo = (text: string, reminder?: number) => {
+    const newTodo: Todo = {
+      id: Date.now().toString(),
+      text,
+      completed: false,
+      priority: 'medium',
+      createdAt: Date.now(),
+      reminder,
+      reminderFired: false,
+    };
+    setTodos(prev => [newTodo, ...prev]);
+  };
+
+  const toggleTodo = (id: string) => {
+    setTodos(prev => prev.map(t => t.id === id ? { ...t, completed: !t.completed } : t));
+  };
+
+  const deleteTodo = (id: string) => {
+    setTodos(prev => prev.filter(t => t.id !== id));
+  };
+
+  // Audio Logic
   useEffect(() => {
     if (ringingAlarm) {
       const vol = ringingAlarm.effects?.fade ? Math.max(0.1, ringingProgress) : 1.0;
@@ -64,18 +95,18 @@ const App: React.FC = () => {
     }
   }, [ringingAlarm]);
 
-  // Update volume while ringing if fade is enabled
   useEffect(() => {
     if (ringingAlarm && ringingAlarm.effects?.fade) {
       sfx.setVolume(Math.max(0.1, ringingProgress));
     }
   }, [ringingProgress, ringingAlarm]);
 
-  // Tick Logic
+  // Clock Ticks & Reminder Check
   useEffect(() => {
     const timer = setInterval(() => {
       const now = new Date();
       setCurrentTime(now);
+      const nowTs = now.getTime();
 
       const currentHours = now.getHours();
       const currentMinutes = now.getMinutes();
@@ -86,6 +117,7 @@ const App: React.FC = () => {
       const timeString = `${displayHours.toString().padStart(2, '0')}:${currentMinutes.toString().padStart(2, '0')}`;
       const periodString = isPm ? 'pm' : 'am';
 
+      // Check Alarms
       if (currentSeconds === 0) {
         const triggered = alarms.find(a => 
           a.isActive && 
@@ -98,12 +130,28 @@ const App: React.FC = () => {
           setRingingProgress(0);
         }
       }
+
+      // Check Todo Reminders
+      setTodos(prev => {
+        let changed = false;
+        const next = prev.map(t => {
+          if (!t.completed && t.reminder && !t.reminderFired && t.reminder <= nowTs) {
+            changed = true;
+            // Trigger a sound and alert for reminder
+            if (uiSoundsEnabled) sfx.playTick();
+            // We'll just mark it as fired for now. In a real app we'd show a notification.
+            return { ...t, reminderFired: true };
+          }
+          return t;
+        });
+        return changed ? next : prev;
+      });
+
     }, 1000);
 
     return () => clearInterval(timer);
-  }, [alarms, ringingAlarm]);
+  }, [alarms, ringingAlarm, uiSoundsEnabled]);
 
-  // Ringing Animation logic for Gradual Wake
   useEffect(() => {
     let fadeTimer: number;
     if (ringingAlarm) {
@@ -149,35 +197,20 @@ const App: React.FC = () => {
   return (
     <div className="relative min-h-screen w-full flex flex-col items-center px-6 pt-10 pb-36 overflow-hidden bg-appBg">
       
-      {/* Ringing Alarm Overlay */}
+      {/* Ringing Overlay */}
       {ringingAlarm && (
         <div 
             className="fixed inset-0 z-[200] flex flex-col items-center justify-center p-8 bg-appBg/90 backdrop-blur-xl animate-in fade-in zoom-in duration-500"
             style={{ opacity: ringingAlarm.effects?.fade ? Math.max(0.4, ringingProgress) : 1 }}
         >
-           <div 
-                className={`w-64 h-64 rounded-full neu-outset flex items-center justify-center mb-12 animate-bounce`}
-                style={{ transform: ringingAlarm.effects?.fade ? `scale(${0.8 + ringingProgress * 0.2})` : 'scale(1)' }}
-           >
+           <div className="w-64 h-64 rounded-full neu-outset flex items-center justify-center mb-12 animate-bounce">
               <div className="w-56 h-56 rounded-full neu-inset flex flex-col items-center justify-center">
                  <span className="text-5xl font-black text-appText tabular-nums">{ringingAlarm.time}</span>
                  <span className="text-xl font-bold uppercase text-appMuted">{ringingAlarm.period}</span>
               </div>
            </div>
            <h2 className="text-2xl font-black text-appText mb-2 uppercase tracking-widest">{ringingAlarm.label || "Alarm"}</h2>
-           <p className="text-appMuted font-medium mb-1 text-center">Rise and shine.</p>
-           <p className="text-[10px] font-black text-appMuted uppercase tracking-widest mb-12">
-            Sound: {ringingAlarm.sound?.name} {ringingAlarm.effects?.fade && `(Fading In ${Math.round(ringingProgress * 100)}%)`}
-           </p>
-           
-           <div className="flex flex-col w-full max-w-xs gap-4">
-              <button 
-                onClick={dismissAlarm}
-                className="w-full py-6 rounded-3xl neu-outset text-appText font-black uppercase tracking-[0.2em] active:neu-pressed transition-all shadow-xl"
-              >
-                Dismiss
-              </button>
-           </div>
+           <button onClick={dismissAlarm} className="w-full max-w-xs py-6 rounded-3xl neu-outset text-appText font-black uppercase tracking-[0.2em] active:neu-pressed transition-all shadow-xl">Dismiss</button>
         </div>
       )}
 
@@ -191,6 +224,7 @@ const App: React.FC = () => {
         </div>
       </div>
 
+      {/* Main Content */}
       <div className="w-full max-w-md z-10 flex flex-col items-center">
         {activeTab === 'Clock' && (
           <div className="flex flex-col items-center gap-16 w-full">
@@ -225,6 +259,16 @@ const App: React.FC = () => {
             onUpdateDays={updateAlarmDays}
             onUpdateSound={updateAlarmSound}
             onUpdateEffects={updateAlarmEffects}
+            uiSoundsEnabled={uiSoundsEnabled}
+          />
+        )}
+
+        {activeTab === 'Focus' && (
+          <TodoView 
+            todos={todos}
+            onAdd={addTodo}
+            onToggle={toggleTodo}
+            onDelete={deleteTodo}
             uiSoundsEnabled={uiSoundsEnabled}
           />
         )}
