@@ -1,4 +1,3 @@
-
 import React, { useState } from 'react';
 import { Alarm } from '../types';
 import AlarmCard from './AlarmCard';
@@ -12,6 +11,7 @@ interface Props {
   onUpdateDays: (id: string, days: string[]) => void;
   onUpdateSound: (id: string, sound: { name: string; url?: string }) => void;
   onUpdateEffects: (id: string, effects: { fade: boolean; vibrate: boolean }) => void;
+  onUpdateLabel: (id: string, label: string) => void;
   uiSoundsEnabled: boolean;
 }
 
@@ -19,7 +19,7 @@ const WEEKDAYS = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'];
 
 const AlarmList: React.FC<Props> = ({ 
     mini, alarms, onToggle, onDelete, onAdd, 
-    onUpdateDays, onUpdateSound, onUpdateEffects, uiSoundsEnabled 
+    onUpdateDays, onUpdateSound, onUpdateEffects, onUpdateLabel, uiSoundsEnabled 
 }) => {
   const [isAdding, setIsAdding] = useState(false);
   const [newTime, setNewTime] = useState("07:00");
@@ -41,6 +41,7 @@ const AlarmList: React.FC<Props> = ({
       effects: newEffects
     });
     setIsAdding(false);
+    setNewLabel("");
   };
 
   return (
@@ -91,6 +92,17 @@ const AlarmList: React.FC<Props> = ({
             </div>
           </div>
 
+          <div>
+            <label className="text-[10px] font-black uppercase text-appMuted tracking-widest block mb-2">Label</label>
+            <input 
+              type="text" 
+              value={newLabel}
+              onChange={(e) => setNewLabel(e.target.value)}
+              placeholder="e.g. Wake Up"
+              className="w-full bg-appBg neu-inset border-none rounded-xl p-3 text-appText font-bold focus:ring-1 focus:ring-appText/20"
+            />
+          </div>
+
           <button 
             onClick={handleAdd}
             className="w-full py-4 rounded-2xl bg-appText text-appBg font-black uppercase tracking-widest shadow-lg active:scale-95 transition-all"
@@ -111,6 +123,7 @@ const AlarmList: React.FC<Props> = ({
             onDaysChange={(days) => onUpdateDays(alarm.id, days)}
             onSoundChange={(sound) => onUpdateSound(alarm.id, sound)}
             onEffectsChange={(eff) => onUpdateEffects(alarm.id, eff)}
+            onLabelChange={(label) => onUpdateLabel(alarm.id, label)}
             uiSoundsEnabled={uiSoundsEnabled}
           />
         ))}

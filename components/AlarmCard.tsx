@@ -14,6 +14,7 @@ interface AlarmCardProps {
   onDaysChange?: (days: string[]) => void;
   onSoundChange?: (sound: { name: string; url?: string }) => void;
   onEffectsChange?: (effects: { fade: boolean; vibrate: boolean }) => void;
+  onLabelChange?: (label: string) => void;
   uiSoundsEnabled?: boolean;
   className?: string;
 }
@@ -41,6 +42,7 @@ const AlarmCard: React.FC<AlarmCardProps> = ({
   onDaysChange,
   onSoundChange,
   onEffectsChange,
+  onLabelChange,
   uiSoundsEnabled,
   className = "" 
 }) => {
@@ -63,6 +65,15 @@ const AlarmCard: React.FC<AlarmCardProps> = ({
       ? days.filter(d => d !== day)
       : [...days, day];
     onDaysChange(newDays);
+  };
+
+  const toggleEffect = (type: 'fade' | 'vibrate') => {
+    playFeedback();
+    if (!onEffectsChange) return;
+    onEffectsChange({
+      ...effects,
+      [type]: !effects[type]
+    });
   };
 
   const handlePreview = (s: { name: string; url?: string }) => {
@@ -106,11 +117,15 @@ const AlarmCard: React.FC<AlarmCardProps> = ({
         </button>
       )}
 
-      {/* Header with Switch */}
-      <div className="flex justify-between items-center">
-        <span className="text-[10px] font-black tracking-[0.2em] uppercase text-appMuted">
-          {label || "NEW ALARM"}
-        </span>
+      {/* Header with Switch & Label Input */}
+      <div className="flex justify-between items-center gap-4">
+        <input
+          type="text"
+          value={label}
+          onChange={(e) => onLabelChange?.(e.target.value)}
+          placeholder="Alarm Label"
+          className="bg-transparent border-none outline-none text-[10px] font-black tracking-[0.2em] uppercase text-appMuted placeholder:text-appMuted/30 flex-1"
+        />
         <button 
           onClick={() => { playFeedback(); onToggle(); }}
           className={`w-12 h-6 rounded-full transition-all duration-300 p-1 flex items-center ${isActive ? 'bg-appText' : 'bg-appText/10'}`}
@@ -153,25 +168,51 @@ const AlarmCard: React.FC<AlarmCardProps> = ({
         })}
       </div>
 
-      {/* Sound Selection Bar */}
-      <div className="flex flex-col gap-2">
-        <button 
-          onClick={() => { playFeedback(); setShowSounds(!showSounds); }}
-          className={`h-14 px-5 rounded-2xl flex items-center justify-between transition-all bg-appText/[0.03] border border-appText/[0.05] active:bg-appText/[0.08]`}
-        >
-          <div className="flex items-center gap-4">
-            <svg className={`w-4 h-4 ${sound?.url ? 'text-blue-500' : 'text-appMuted'}`} fill="currentColor" viewBox="0 0 20 20">
-              <path d="M9.383 3.076A1 1 0 0110 4v12a1 1 0 01-1.707.707L4.586 13H2a1 1 0 01-1-1V8a1 1 0 011-1h2.586l3.707-3.707a1 1 0 011.09-.217z"/>
-            </svg>
-            <span className="text-[10px] font-black uppercase text-appText/60 tracking-[0.2em] truncate">
-              {sound.name}
-            </span>
+      {/* Bottom Controls: Sound & Effects */}
+      <div className="flex flex-col gap-3">
+        <div className="flex gap-3">
+          {/* Sound Selection Bar */}
+          <button 
+            onClick={() => { playFeedback(); setShowSounds(!showSounds); }}
+            className={`flex-1 h-14 px-5 rounded-2xl flex items-center justify-between transition-all bg-appText/[0.03] border border-appText/[0.05] active:bg-appText/[0.08]`}
+          >
+            <div className="flex items-center gap-4 min-w-0">
+              <svg className={`w-4 h-4 flex-shrink-0 ${sound?.url ? 'text-blue-500' : 'text-appMuted'}`} fill="currentColor" viewBox="0 0 20 20">
+                <path d="M9.383 3.076A1 1 0 0110 4v12a1 1 0 01-1.707.707L4.586 13H2a1 1 0 01-1-1V8a1 1 0 011-1h2.586l3.707-3.707a1 1 0 011.09-.217z"/>
+              </svg>
+              <span className="text-[10px] font-black uppercase text-appText/60 tracking-[0.2em] truncate">
+                {sound.name}
+              </span>
+            </div>
+            <svg className={`w-4 h-4 text-appMuted transition-transform duration-300 ${showSounds ? 'rotate-180' : ''}`} fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" /></svg>
+          </button>
+
+          {/* Effect Toggles */}
+          <div className="flex gap-2">
+            <button 
+              onClick={() => toggleEffect('fade')}
+              title="Gradual volume increase"
+              className={`w-14 h-14 rounded-2xl flex items-center justify-center transition-all ${effects.fade ? 'neu-pressed text-appText' : 'neu-outset text-appMuted/30'}`}
+            >
+              <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 17h8m-8-5h8m-8-5h8M3 17v-4a4 4 0 014-4h1a4 4 0 014 4v4m-8 0h8" />
+              </svg>
+            </button>
+            <button 
+              onClick={() => toggleEffect('vibrate')}
+              title="Vibration"
+              className={`w-14 h-14 rounded-2xl flex items-center justify-center transition-all ${effects.vibrate ? 'neu-pressed text-appText' : 'neu-outset text-appMuted/30'}`}
+            >
+              <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 18h.01M8 21h8a2 2 0 002-2V5a2 2 0 00-2-2H8a2 2 0 00-2 2v14a2 2 0 002 2z" />
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M18 11h3m-3-4h2m-2 8h2M3 11h3m-3-4h2m-2 8h2" />
+              </svg>
+            </button>
           </div>
-          <svg className={`w-4 h-4 text-appMuted transition-transform duration-300 ${showSounds ? 'rotate-180' : ''}`} fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" /></svg>
-        </button>
+        </div>
 
         {showSounds && (
-          <div className="flex flex-col gap-1.5 mt-2 animate-in slide-in-from-top-2 duration-300 bg-appBg/50 backdrop-blur-md p-3 rounded-2xl border border-appText/10">
+          <div className="flex flex-col gap-1.5 mt-1 animate-in slide-in-from-top-2 duration-300 bg-appBg/50 backdrop-blur-md p-3 rounded-2xl border border-appText/10">
             <div className="grid grid-cols-1 gap-1">
               {DEFAULT_SOUNDS.map((s) => (
                 <div key={s.name} className="flex gap-1">

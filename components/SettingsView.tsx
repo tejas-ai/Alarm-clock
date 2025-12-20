@@ -1,4 +1,3 @@
-
 import React from 'react';
 import { sounds as sfx } from '../services/sounds';
 
@@ -7,89 +6,98 @@ interface Props {
   onToggleTheme: () => void;
   uiSounds: boolean;
   onToggleUiSounds: () => void;
+  timeFormat: '12h' | '24h';
+  onToggleTimeFormat: () => void;
+  clockMode: 'analog' | 'digital';
+  onToggleClockMode: () => void;
 }
 
-const SettingsView: React.FC<Props> = ({ theme, onToggleTheme, uiSounds, onToggleUiSounds }) => {
+const SettingsView: React.FC<Props> = ({ 
+  theme, 
+  onToggleTheme, 
+  uiSounds, 
+  onToggleUiSounds,
+  timeFormat,
+  onToggleTimeFormat,
+  clockMode,
+  onToggleClockMode
+}) => {
   const handleToggle = (fn: () => void) => {
     if (uiSounds) sfx.playClick();
     fn();
   };
 
   return (
-    <div className="w-full flex flex-col gap-8 animate-in fade-in slide-in-from-bottom-4 duration-500">
-      
-      <section className="space-y-4">
-        <h2 className="px-2 text-[10px] font-black text-appMuted uppercase tracking-[0.3em]">Appearance</h2>
+    <div className="w-full flex flex-col gap-10 animate-in fade-in duration-700 pb-10">
+      <div className="flex flex-col gap-6">
+        <h2 className="px-2 text-[10px] font-black text-appMuted uppercase tracking-[0.3em]">Preferences</h2>
         
-        <div className="neu-outset p-6 rounded-[32px] flex items-center justify-between">
-          <div className="flex flex-col">
-            <span className="text-sm font-black text-appText uppercase tracking-widest">Dark Mode</span>
-            <span className="text-[10px] font-bold text-appMuted uppercase mt-1">Adaptive visual theme</span>
-          </div>
+        <div className="grid grid-cols-1 gap-4">
+          {/* Theme Mode Toggle */}
           <button 
             onClick={() => handleToggle(onToggleTheme)}
-            className={`w-16 h-9 rounded-full transition-all duration-300 p-1 flex items-center neu-inset border border-white/5`}
+            className="neu-outset p-6 rounded-[28px] flex items-center justify-between group active:neu-pressed transition-all"
           >
-            <div className={`w-7 h-7 rounded-full transition-all duration-500 transform shadow-lg flex items-center justify-center ${
-                theme === 'dark' 
-                    ? 'translate-x-7 bg-appText text-appBg' 
-                    : 'translate-x-0 bg-appBg text-appText'
-            }`}>
+            <div className="flex flex-col items-start gap-1">
+              <span className="text-xs font-black text-appText uppercase tracking-widest">Appearance</span>
+              <span className="text-[10px] font-bold text-appMuted uppercase">{theme} Mode</span>
+            </div>
+            <div className="w-12 h-12 rounded-2xl neu-inset flex items-center justify-center text-appText">
               {theme === 'dark' ? (
-                <svg className="w-4 h-4" fill="currentColor" viewBox="0 0 20 20"><path d="M17.293 13.293A8 8 0 016.707 2.707a8.001 8.001 0 1010.586 10.586z" /></svg>
+                <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M20.354 15.354A9 9 0 018.646 3.646 9.003 9.003 0 0012 21a9.003 9.003 0 008.354-5.646z" /></svg>
               ) : (
-                <svg className="w-4 h-4" fill="currentColor" viewBox="0 0 20 20"><path fillRule="evenodd" d="M10 2a1 1 0 011 1v1a1 1 0 11-2 0V3a1 1 0 011-1zm4 8a4 4 0 11-8 0 4 4 0 018 0zm-.464 4.95l.707.707a1 1 0 001.414-1.414l-.707-.707a1 1 0 00-1.414 1.414zm2.12-10.607a1 1 0 010 1.414l-.706.707a1 1 0 11-1.414-1.414l.707-.707a1 1 0 011.414 0zM17 11a1 1 0 100-2h-1a1 1 0 100 2h1zm-7 4a1 1 0 011 1v1a1 1 0 11-2 0v-1a1 1 0 011-1zM5.05 6.464A1 1 0 106.465 5.05l-.708-.707a1 1 0 00-1.414 1.414l.707.707zm1.414 8.486l-.707.707a1 1 0 01-1.414-1.414l.707-.707a1 1 0 011.414 1.414zM4 11a1 1 0 100-2H3a1 1 0 000 2h1z" clipRule="evenodd" /></svg>
+                <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 3v1m0 16v1m9-9h-1M4 12H3m15.364 6.364l-.707-.707M6.343 6.343l-.707-.707m12.728 0l-.707.707M6.343 17.657l-.707.707M16 12a4 4 0 11-8 0 4 4 0 018 0z" /></svg>
+              )}
+            </div>
+          </button>
+
+          {/* Time Format Toggle */}
+          <button 
+            onClick={() => handleToggle(onToggleTimeFormat)}
+            className="neu-outset p-6 rounded-[28px] flex items-center justify-between group active:neu-pressed transition-all"
+          >
+            <div className="flex flex-col items-start gap-1">
+              <span className="text-xs font-black text-appText uppercase tracking-widest">Time Format</span>
+              <span className="text-[10px] font-bold text-appMuted uppercase">{timeFormat}</span>
+            </div>
+            <div className="w-12 h-12 rounded-2xl neu-inset flex items-center justify-center text-appText font-black text-[10px]">
+              {timeFormat}
+            </div>
+          </button>
+
+          {/* UI Sounds Toggle */}
+          <button 
+            onClick={() => handleToggle(onToggleUiSounds)}
+            className="neu-outset p-6 rounded-[28px] flex items-center justify-between group active:neu-pressed transition-all"
+          >
+            <div className="flex flex-col items-start gap-1">
+              <span className="text-xs font-black text-appText uppercase tracking-widest">Acoustics</span>
+              <span className="text-[10px] font-bold text-appMuted uppercase">{uiSounds ? 'Enabled' : 'Disabled'}</span>
+            </div>
+            <div className={`w-12 h-12 rounded-2xl neu-inset flex items-center justify-center transition-colors ${uiSounds ? 'text-appText' : 'text-appMuted/30'}`}>
+              <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15.536 8.464a5 5 0 010 7.072m2.828-9.9a9 9 0 010 12.728M5.586 15H4a1 1 0 01-1-1v-4a1 1 0 011-1h1.586l4.707-4.707C10.923 3.663 12 4.109 12 5v14c0 .891-1.077 1.337-1.707.707L5.586 15z" /></svg>
+            </div>
+          </button>
+
+          {/* Clock Mode Toggle (Analog/Digital) Added at the bottom */}
+          <button 
+            onClick={() => handleToggle(onToggleClockMode)}
+            className="neu-outset p-6 rounded-[28px] flex items-center justify-between group active:neu-pressed transition-all"
+          >
+            <div className="flex flex-col items-start gap-1">
+              <span className="text-xs font-black text-appText uppercase tracking-widest">Clock Style</span>
+              <span className="text-[10px] font-bold text-appMuted uppercase">{clockMode} Mode</span>
+            </div>
+            <div className="w-12 h-12 rounded-2xl neu-inset flex items-center justify-center text-appText">
+              {clockMode === 'analog' ? (
+                <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" /></svg>
+              ) : (
+                <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8V4m0 4h4m-4 0l-4-4m4 8V4M7 21h10a2 2 0 002-2V7a2 2 0 00-2-2H7a2 2 0 00-2 2v12a2 2 0 002 2z" /></svg>
               )}
             </div>
           </button>
         </div>
-      </section>
-
-      <section className="space-y-4">
-        <h2 className="px-2 text-[10px] font-black text-appMuted uppercase tracking-[0.3em]">Audio</h2>
-        
-        <div className="neu-outset p-6 rounded-[32px] flex items-center justify-between">
-          <div className="flex flex-col">
-            <span className="text-sm font-black text-appText uppercase tracking-widest">UI Sound FX</span>
-            <span className="text-[10px] font-bold text-appMuted uppercase mt-1">Interactions & Taps</span>
-          </div>
-          <button 
-            onClick={() => handleToggle(onToggleUiSounds)}
-            className={`w-16 h-9 rounded-full transition-all duration-300 p-1 flex items-center neu-inset border border-white/5`}
-          >
-            <div className={`w-7 h-7 rounded-full transition-all duration-500 transform shadow-lg flex items-center justify-center ${
-                uiSounds 
-                    ? 'translate-x-7 bg-appText text-appBg' 
-                    : 'translate-x-0 bg-appBg text-appText'
-            }`} />
-          </button>
-        </div>
-      </section>
-
-      <section className="space-y-4">
-        <h2 className="px-2 text-[10px] font-black text-appMuted uppercase tracking-[0.3em]">Founder</h2>
-        <div className="neu-outset p-6 rounded-[32px] flex flex-col gap-1 group relative overflow-hidden">
-            <div className="absolute top-0 right-0 p-6 opacity-[0.03] group-hover:opacity-[0.08] transition-opacity">
-                <svg className="w-24 h-24 text-appText" fill="currentColor" viewBox="0 0 24 24"><path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm0 3c1.66 0 3 1.34 3 3s-1.34 3-3 3-3-1.34-3-3 1.34-3 3-3zm0 14.2c-2.5 0-4.71-1.28-6-3.22.03-1.99 4-3.08 6-3.08 1.99 0 5.97 1.09 6 3.08-1.29 1.94-3.5 3.22-6 3.22z"/></svg>
-            </div>
-            <span className="text-xs font-black text-appText uppercase tracking-[0.2em]">Tejas J.H</span>
-            <span className="text-[9px] font-bold text-appMuted uppercase tracking-widest">Visionary & Lead Engineer</span>
-        </div>
-      </section>
-
-      <section className="space-y-4">
-        <h2 className="px-2 text-[10px] font-black text-appMuted uppercase tracking-[0.3em]">System</h2>
-        <div className="grid grid-cols-2 gap-4">
-          <div className="neu-outset p-5 rounded-[28px] flex flex-col items-center justify-center text-center gap-2">
-            <span className="text-[9px] font-black text-appMuted uppercase tracking-widest">Version</span>
-            <span className="text-xs font-black text-appText">v2.6.0-LUMINA</span>
-          </div>
-          <div className="neu-outset p-5 rounded-[28px] flex flex-col items-center justify-center text-center gap-2">
-            <span className="text-[9px] font-black text-appMuted uppercase tracking-widest">Engine</span>
-            <span className="text-xs font-black text-appText">Lumina Audio v1</span>
-          </div>
-        </div>
-      </section>
+      </div>
     </div>
   );
 };

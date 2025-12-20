@@ -25,9 +25,22 @@ export interface Todo {
   reminderFired?: boolean;
 }
 
-export type NavTab = 'Clock' | 'Alarm' | 'Focus' | 'Stopwatch' | 'Settings';
+export interface UserStats {
+  luminaIndex: number;
+  tasksCompleted: number;
+  alarmsConsistency: number; // 0-100
+  streak: number;
+}
+
+export type NavTab = 'Clock' | 'World' | 'Alarm' | 'Focus' | 'Calendar' | 'Stopwatch' | 'Timer' | 'Settings';
 
 export interface Lap {
   id: number;
   time: string;
+}
+
+export interface WorldCity {
+  id: string;
+  name: string;
+  timezone: string;
 }

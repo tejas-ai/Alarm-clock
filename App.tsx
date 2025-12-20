@@ -1,20 +1,31 @@
-import React, { useState, useEffect, useCallback } from 'react';
-import { NavTab, Alarm, Todo } from './types';
+import React, { useState, useEffect, useMemo } from 'react';
+import { NavTab, Alarm, Todo, UserStats } from './types';
 import { sounds as sfx } from './services/sounds';
 import AnalogClock from './components/AnalogClock';
+import DigitalClock from './components/DigitalClock';
+import WorldClockView from './components/WorldClockView';
 import AlarmList from './components/AlarmList';
 import StopwatchView from './components/StopwatchView';
+import TimerView from './components/TimerView';
 import SettingsView from './components/SettingsView';
 import TodoView from './components/TodoView';
+import CalendarView from './components/CalendarView';
 import Dock from './components/Dock';
 
 const App: React.FC = () => {
   const [activeTab, setActiveTab] = useState<NavTab>('Clock');
   const [currentTime, setCurrentTime] = useState(new Date());
-  const [ringingAlarm, setRingingAlarm] = useState<Alarm | null>(null);
-  const [ringingProgress, setRingingProgress] = useState(0);
+  const [clockMode, setClockMode] = useState<'analog' | 'digital'>(() => {
+    return (localStorage.getItem('lumina_clock_mode') as 'analog' | 'digital') || 'digital';
+  });
+  const [timeFormat, setTimeFormat] = useState<'12h' | '24h'>(() => {
+    return (localStorage.getItem('lumina_time_format') as '12h' | '24h') || '12h';
+  });
 
-  // UI Sounds State
+  useEffect(() => {
+    localStorage.setItem('lumina_clock_mode', clockMode);
+  }, [clockMode]);
+
   const [uiSoundsEnabled, setUiSoundsEnabled] = useState(() => {
     return localStorage.getItem('lumina_ui_sounds') !== 'false';
   });
@@ -26,22 +37,15 @@ const App: React.FC = () => {
     });
   };
 
-  const handleTabChange = (tab: NavTab) => {
-    if (uiSoundsEnabled) sfx.playClick();
-    setActiveTab(tab);
-  };
-
-  // Theme Management
   const [theme, setTheme] = useState<'light' | 'dark'>(() => {
     return (localStorage.getItem('lumina_theme') as 'light' | 'dark') || 'light';
   });
 
   useEffect(() => {
-    document.body.classList.toggle('dark-mode', theme === 'dark');
+    document.body.classList.toggle('dark', theme === 'dark');
     localStorage.setItem('lumina_theme', theme);
   }, [theme]);
 
-  // Alarms State
   const [alarms, setAlarms] = useState<Alarm[]>(() => {
     const saved = localStorage.getItem('lumina_alarms');
     return saved ? JSON.parse(saved) : [
@@ -50,235 +54,124 @@ const App: React.FC = () => {
     ];
   });
 
-  useEffect(() => {
-    localStorage.setItem('lumina_alarms', JSON.stringify(alarms));
-  }, [alarms]);
-
-  // Todos State
   const [todos, setTodos] = useState<Todo[]>(() => {
     const saved = localStorage.getItem('lumina_todos');
     return saved ? JSON.parse(saved) : [];
   });
 
   useEffect(() => {
+    localStorage.setItem('lumina_alarms', JSON.stringify(alarms));
+  }, [alarms]);
+
+  useEffect(() => {
     localStorage.setItem('lumina_todos', JSON.stringify(todos));
   }, [todos]);
 
-  const addTodo = (text: string, reminder?: number) => {
-    const newTodo: Todo = {
-      id: Date.now().toString(),
-      text,
-      completed: false,
-      priority: 'medium',
-      createdAt: Date.now(),
-      reminder,
-      reminderFired: false,
+  const sortedUpcomingAlarms = useMemo(() => {
+    const getWait = (a: Alarm) => {
+        const [h, m] = a.time.split(':').map(Number);
+        const a24 = a.period === 'pm' ? (h % 12) + 12 : (h % 12);
+        const nowM = currentTime.getHours() * 60 + currentTime.getMinutes();
+        const aM = a24 * 60 + m;
+        return aM > nowM ? aM - nowM : aM - nowM + 1440;
     };
-    setTodos(prev => [newTodo, ...prev]);
-  };
-
-  const toggleTodo = (id: string) => {
-    setTodos(prev => prev.map(t => t.id === id ? { ...t, completed: !t.completed } : t));
-  };
-
-  const deleteTodo = (id: string) => {
-    setTodos(prev => prev.filter(t => t.id !== id));
-  };
-
-  // Audio Logic
-  useEffect(() => {
-    if (ringingAlarm) {
-      const vol = ringingAlarm.effects?.fade ? Math.max(0.1, ringingProgress) : 1.0;
-      sfx.playAlarmSound(ringingAlarm.sound || { name: 'Classic Bell' }, vol);
-    } else {
-      sfx.stopAll();
-    }
-  }, [ringingAlarm]);
+    return alarms.filter(a => a.isActive).sort((a, b) => getWait(a) - getWait(b));
+  }, [alarms, currentTime]);
 
   useEffect(() => {
-    if (ringingAlarm && ringingAlarm.effects?.fade) {
-      sfx.setVolume(Math.max(0.1, ringingProgress));
-    }
-  }, [ringingProgress, ringingAlarm]);
-
-  // Clock Ticks & Reminder Check
-  useEffect(() => {
-    const timer = setInterval(() => {
-      const now = new Date();
-      setCurrentTime(now);
-      const nowTs = now.getTime();
-
-      const currentHours = now.getHours();
-      const currentMinutes = now.getMinutes();
-      const currentSeconds = now.getSeconds();
-      const currentDay = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'][now.getDay()];
-      const isPm = currentHours >= 12;
-      const displayHours = currentHours % 12 || 12;
-      const timeString = `${displayHours.toString().padStart(2, '0')}:${currentMinutes.toString().padStart(2, '0')}`;
-      const periodString = isPm ? 'pm' : 'am';
-
-      // Check Alarms
-      if (currentSeconds === 0) {
-        const triggered = alarms.find(a => 
-          a.isActive && 
-          a.time === timeString && 
-          a.period === periodString &&
-          a.days.includes(currentDay)
-        );
-        if (triggered && !ringingAlarm) {
-          setRingingAlarm(triggered);
-          setRingingProgress(0);
-        }
-      }
-
-      // Check Todo Reminders
-      setTodos(prev => {
-        let changed = false;
-        const next = prev.map(t => {
-          if (!t.completed && t.reminder && !t.reminderFired && t.reminder <= nowTs) {
-            changed = true;
-            if (uiSoundsEnabled) sfx.playTick();
-            return { ...t, reminderFired: true };
-          }
-          return t;
-        });
-        return changed ? next : prev;
-      });
-
-    }, 1000);
-
+    const timer = setInterval(() => setCurrentTime(new Date()), 1000);
     return () => clearInterval(timer);
-  }, [alarms, ringingAlarm, uiSoundsEnabled]);
+  }, []);
 
-  useEffect(() => {
-    let fadeTimer: number;
-    if (ringingAlarm) {
-        fadeTimer = window.setInterval(() => {
-            setRingingProgress(prev => Math.min(prev + 0.05, 1)); 
-        }, 1000);
-    }
-    return () => clearInterval(fadeTimer);
-  }, [ringingAlarm]);
-
-  const toggleAlarm = (id: string) => {
-    setAlarms(prev => prev.map(a => a.id === id ? { ...a, isActive: !a.isActive } : a));
-  };
-
-  const deleteAlarm = (id: string) => {
-    setAlarms(prev => prev.filter(a => a.id !== id));
-  };
-
-  const addAlarm = (newAlarm: Alarm) => {
-    setAlarms(prev => [...prev, newAlarm]);
-  };
-
-  const updateAlarmDays = (id: string, days: string[]) => {
-    setAlarms(prev => prev.map(a => a.id === id ? { ...a, days } : a));
-  };
-
-  const updateAlarmSound = (id: string, sound: { name: string; url?: string }) => {
-    setAlarms(prev => prev.map(a => a.id === id ? { ...a, sound } : a));
-  };
-
-  const updateAlarmEffects = (id: string, effects: { fade: boolean; vibrate: boolean }) => {
-    setAlarms(prev => prev.map(a => a.id === id ? { ...a, effects } : a));
-  };
-
-  const dismissAlarm = () => {
+  const handleTabChange = (tab: NavTab) => {
     if (uiSoundsEnabled) sfx.playClick();
-    setRingingAlarm(null);
-    setRingingProgress(0);
+    setActiveTab(tab);
   };
 
-  const toggleTheme = () => setTheme(prev => prev === 'light' ? 'dark' : 'light');
+  const getGreeting = (date: Date) => {
+    const hour = date.getHours();
+    if (hour >= 5 && hour < 12) return "Good Morning";
+    if (hour >= 12 && hour < 17) return "Good Afternoon";
+    return "Good Evening";
+  };
 
   return (
-    <div className="relative min-h-screen w-full flex flex-col items-center px-6 pt-10 pb-48 overflow-y-auto bg-appBg">
+    <div className="relative min-h-screen w-full flex flex-col items-center px-4 md:px-6 pt-10 pb-48 overflow-y-auto bg-appBg transition-all duration-500">
       
-      {/* Ringing Overlay */}
-      {ringingAlarm && (
-        <div 
-            className="fixed inset-0 z-[200] flex flex-col items-center justify-center p-8 bg-appBg/90 backdrop-blur-xl animate-in fade-in zoom-in duration-500"
-            style={{ opacity: ringingAlarm.effects?.fade ? Math.max(0.4, ringingProgress) : 1 }}
-        >
-           <div className="w-64 h-64 rounded-full neu-outset flex items-center justify-center mb-12 animate-bounce">
-              <div className="w-56 h-56 rounded-full neu-inset flex flex-col items-center justify-center">
-                 <span className="text-5xl font-black text-appText tabular-nums">{ringingAlarm.time}</span>
-                 <span className="text-xl font-bold uppercase text-appMuted">{ringingAlarm.period}</span>
-              </div>
-           </div>
-           <h2 className="text-2xl font-black text-appText mb-2 uppercase tracking-widest">{ringingAlarm.label || "Alarm"}</h2>
-           <button onClick={dismissAlarm} className="w-full max-w-xs py-6 rounded-3xl neu-outset text-appText font-black uppercase tracking-[0.2em] active:neu-pressed transition-all shadow-xl">Dismiss</button>
+      {/* Header Bar */}
+      <div className="w-full max-w-lg flex items-start justify-between mb-8 relative z-10 px-4">
+        <div className="flex flex-col animate-in fade-in slide-in-from-left-2 duration-700">
+          <span className="text-[10px] font-black text-appMuted uppercase tracking-[0.8em] mb-1.5 opacity-40">LUMINA</span>
+          <h1 className="text-4xl font-black text-appText tracking-tighter italic leading-none">{activeTab}</h1>
         </div>
-      )}
-
-      {/* Header */}
-      <div className="w-full max-w-md flex justify-between items-end mb-12 relative z-10 px-2">
-        <div className="flex flex-col">
-          <span className="text-[11px] font-black text-appMuted uppercase tracking-[0.4em]">Lumina</span>
-          <h1 className="text-3xl font-black text-appText tracking-tight -mt-1.5 italic">
-            {activeTab}
-          </h1>
+        <div className="flex flex-col items-end pt-1.5 animate-in fade-in slide-in-from-right-2 duration-700">
+           <span className="text-[10px] font-black text-appText uppercase tracking-[0.45em] opacity-90 text-right">{getGreeting(currentTime)}</span>
+           <div className="h-[2px] w-8 bg-appText/10 mt-1 rounded-full" />
         </div>
       </div>
 
-      {/* Main Content */}
-      <div className="w-full max-w-md z-10 flex flex-col items-center flex-1">
+      <div className="w-full max-w-lg z-10 flex flex-col items-center flex-1 gap-12">
         {activeTab === 'Clock' && (
-          <div className="flex flex-col items-center gap-16 w-full">
-            <AnalogClock time={currentTime} />
-            <div className="w-full space-y-8">
-               <div className="flex items-center gap-6 px-4">
-                 <div className="h-[1.5px] flex-1 bg-gradient-to-r from-transparent to-appMuted" />
-                 <h3 className="text-[10px] font-black text-appMuted uppercase tracking-[0.25em] whitespace-nowrap">Schedule</h3>
-                 <div className="h-[1.5px] flex-1 bg-gradient-to-l from-transparent to-appMuted" />
-               </div>
-               <AlarmList 
-                mini 
-                alarms={alarms.filter(a => a.isActive)} 
-                onToggle={toggleAlarm} 
-                onDelete={deleteAlarm}
-                onAdd={addAlarm}
-                onUpdateDays={updateAlarmDays}
-                onUpdateSound={updateAlarmSound}
-                onUpdateEffects={updateAlarmEffects}
-                uiSoundsEnabled={uiSoundsEnabled}
-               />
+          <div className="flex flex-col items-center w-full animate-in fade-in duration-1000 gap-10">
+            
+            <div className="w-full flex justify-center py-6">
+              {clockMode === 'analog' ? (
+                <AnalogClock time={currentTime} />
+              ) : (
+                <DigitalClock time={currentTime} timeFormat={timeFormat} />
+              )}
             </div>
+            
+            <div className="w-full space-y-6">
+               <div className="flex items-center gap-6">
+                 <h3 className="text-[11px] font-black text-appMuted uppercase tracking-[1em] whitespace-nowrap opacity-90">Upcoming</h3>
+                 <div className="h-[1px] flex-1 bg-appText/10" />
+               </div>
+               <AlarmList mini alarms={sortedUpcomingAlarms} onToggle={(id) => setAlarms(prev => prev.map(a => a.id === id ? { ...a, isActive: !a.isActive } : a))} onDelete={() => {}} onAdd={() => {}} onUpdateDays={() => {}} onUpdateSound={() => {}} onUpdateEffects={() => {}} onUpdateLabel={() => {}} uiSoundsEnabled={uiSoundsEnabled} />
+            </div>
+          </div>
+        )}
+
+        {activeTab === 'Focus' && (
+          <div className="w-full flex flex-col gap-10 animate-in fade-in duration-700">
+            <TodoView 
+              todos={todos}
+              onAdd={(text, reminder) => setTodos(prev => [{ id: Date.now().toString(), text, completed: false, priority: 'medium', createdAt: Date.now(), reminder }, ...prev])}
+              onToggle={(id) => setTodos(prev => prev.map(t => t.id === id ? { ...t, completed: !t.completed } : t))}
+              onDelete={(id) => setTodos(prev => prev.filter(t => t.id !== id))}
+              uiSoundsEnabled={uiSoundsEnabled}
+            />
           </div>
         )}
 
         {activeTab === 'Alarm' && (
           <AlarmList 
             alarms={alarms} 
-            onToggle={toggleAlarm} 
-            onDelete={deleteAlarm}
-            onAdd={addAlarm}
-            onUpdateDays={updateAlarmDays}
-            onUpdateSound={updateAlarmSound}
-            onUpdateEffects={updateAlarmEffects}
+            onToggle={(id) => setAlarms(prev => prev.map(a => a.id === id ? { ...a, isActive: !a.isActive } : a))} 
+            onDelete={(id) => setAlarms(prev => prev.filter(a => a.id !== id))}
+            onAdd={(a) => setAlarms(prev => [...prev, a])}
+            onUpdateDays={(id, days) => setAlarms(prev => prev.map(a => a.id === id ? { ...a, days } : a))}
+            onUpdateSound={(id, sound) => setAlarms(prev => prev.map(a => a.id === id ? { ...a, sound } : a))}
+            onUpdateEffects={(id, eff) => setAlarms(prev => prev.map(a => a.id === id ? { ...a, effects: eff } : a))}
+            onUpdateLabel={(id, label) => setAlarms(prev => prev.map(a => a.id === id ? { ...a, label } : a))}
             uiSoundsEnabled={uiSoundsEnabled}
           />
         )}
 
-        {activeTab === 'Focus' && (
-          <TodoView 
-            todos={todos}
-            onAdd={addTodo}
-            onToggle={toggleTodo}
-            onDelete={deleteTodo}
-            uiSoundsEnabled={uiSoundsEnabled}
-          />
-        )}
-
+        {activeTab === 'World' && <WorldClockView />}
+        {activeTab === 'Calendar' && <CalendarView />}
         {activeTab === 'Stopwatch' && <StopwatchView />}
-
+        {activeTab === 'Timer' && <TimerView uiSoundsEnabled={uiSoundsEnabled} />}
         {activeTab === 'Settings' && (
           <SettingsView 
             theme={theme} 
-            onToggleTheme={toggleTheme} 
+            onToggleTheme={() => setTheme(prev => prev === 'light' ? 'dark' : 'light')} 
             uiSounds={uiSoundsEnabled}
             onToggleUiSounds={toggleUiSounds}
+            timeFormat={timeFormat}
+            onToggleTimeFormat={() => setTimeFormat(prev => prev === '12h' ? '24h' : '12h')}
+            clockMode={clockMode}
+            onToggleClockMode={() => setClockMode(prev => prev === 'analog' ? 'digital' : 'analog')}
           />
         )}
       </div>
